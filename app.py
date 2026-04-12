@@ -28,7 +28,7 @@ def get_data():
 def add_transaction():
     new_tx = request.json
     data = load_data()
-    data['transactions'].insert(0, new_tx) # 新的在前
+    data['transactions'].insert(0, new_tx) 
     save_data(data)
     return jsonify({"status": "success"})
 
