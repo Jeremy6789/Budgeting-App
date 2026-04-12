@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyMaster Pro | 智慧理財大師</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-slate-50 font-sans text-slate-900">
+
+    <div class="max-w-md mx-auto min-h-screen bg-white shadow-2xl pb-20 relative">
+        <!-- Header: 儀表板 -->
+        <div class="bg-gradient-to-br from-indigo-600 to-teal-500 p-8 text-white rounded-b-3xl shadow-lg">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-black tracking-tight">MoneyMaster <span class="text-xs bg-white/20 px-2 py-1 rounded-full">PRO</span></h1>
+                <button onclick="setBudget()" class="text-sm bg-white/20 px-3 py-1 rounded-lg hover:bg-white/30 transition">設定預算</button>
+            </div>
+            <p class="text-indigo-100 text-sm">本月剩餘預算</p>
+            <div id="balance" class="text-5xl font-mono font-bold mt-1">$0</div>
+            
+            <div class="mt-6 bg-white/10 p-4 rounded-2xl backdrop-blur-md">
+                <div class="flex justify-between text-xs mb-2">
+                    <span>預算進度</span>
+                    <span id="budgetPercent">0%</span>
+                </div>
+                <div class="w-full bg-white/20 h-2 rounded-full overflow-hidden">
+                    <div id="progressBar" class="bg-yellow-300 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 數據統計區 -->
+        <div class="p-6">
+            <h2 class="text-lg font-bold mb-4 flex items-center"><i class="fa-solid fa-chart-pie mr-2 text-indigo-500"></i>消費分析</h2>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-slate-100 p-4 rounded-2xl text-center">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">必要支出</p>
+                    <p id="needSum" class="text-xl font-bold text-blue-600">$0</p>
+                </div>
+                <div class="bg-slate-100 p-4 rounded-2xl text-center">
+                    <p class="text-[10px] text-slate-500 uppercase font-bold">想要支出</p>
+                    <p id="wantSum" class="text-xl font-bold text-orange-500">$0</p>
+                </div>
+            </div>
+            <canvas id="mainChart" class="max-h-48 w-full"></canvas>
+        </div>
+
+        <!-- 帳目列表 -->
+        <div class="p-6 border-t border-slate-100">
+            <h2 class="text-lg font-bold mb-4">最近活動</h2>
+            <ul id="txList" class="space-y-4">
+                <!-- 動態注入 -->
+            </ul>
+        </div>
+
+        <!-- 懸浮新增按鈕 -->
+        <button onclick="toggleModal()" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-xl hover:scale-110 active:scale-95 transition-all flex items-center justify-center text-2xl">
+            <i class="fa-solid fa-plus"></i>
+        </button>
+
+        <!-- 新增視窗 Modal -->
+        <div id="modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-end">
+            <div class="bg-white w-full rounded-t-3xl p-8 animate-slide-up">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">新增帳目</h3>
+                    <button onclick="toggleModal()" class="text-slate-400 text-xl"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex gap-2 overflow-x-auto pb-2" id="categoryPicker">
+                        <button onclick="selectCat(this, '餐飲', 'fa-utensils')" class="cat-btn flex-shrink-0 bg-slate-100 px-4 py-2 rounded-xl text-sm active-cat"><i class="fa-solid fa-utensils mr-1"></i>餐飲</button>
+                        <button onclick="selectCat(this, '交通', 'fa-bus')" class="cat-btn flex-shrink-0 bg-slate-100 px-4 py-2 rounded-xl text-sm"><i class="fa-solid fa-bus mr-1"></i>交通</button>
+                        <button onclick="selectCat(this, '娛樂', 'fa-gamepad')" class="cat-btn flex-shrink-0 bg-slate-100 px-4 py-2 rounded-xl text-sm"><i class="fa-solid fa-gamepad mr-1"></i>娛樂</button>
+                        <button onclick="selectCat(this, '購物', 'fa-bag-shopping')" class="cat-btn flex-shrink-0 bg-slate-100 px-4 py-2 rounded-xl text-sm"><i class="fa-solid fa-bag-shopping mr-1"></i>購物</button>
+                    </div>
+                    <input id="title" type="text" placeholder="描述內容" class="w-full bg-slate-50 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input id="amount" type="number" placeholder="金額" class="w-full bg-slate-50 border-none p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-2xl font-bold">
+                    
+                    <div class="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+                        <span class="font-medium text-slate-600">這筆消費是必須的嗎？</span>
+                        <input type="checkbox" id="isNeed" checked class="w-6 h-6 accent-indigo-600">
+                    </div>
+
+                    <button onclick="submitTx()" class="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold text-lg shadow-lg">儲存並完成</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentCat = "餐飲";
+        let currentIcon = "fa-utensils";
+        let myChart = null;
+
+        async function refresh() {
+            const res = await fetch('/api/data');
+            const data = await res.json();
+            render(data);
+        }
+
+        function render(data) {
+            const budget = data.budget;
+            const txs = data.transactions;
+            
+            let total = 0;
+            let needTotal = 0;
+            let wantTotal = 0;
+            const list = document.getElementById('txList');
+            list.innerHTML = "";
+
+            txs.forEach((tx, index) => {
+                total += tx.amount;
+                tx.isNeed ? needTotal += tx.amount : wantTotal += tx.amount;
+
+                list.innerHTML += `
+                    <li class="flex items-center group">
+                        <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 mr-4">
+                            <i class="fa-solid ${tx.icon}"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="font-bold text-sm">${tx.title}</p>
+                            <p class="text-[10px] text-slate-400">${tx.category} • ${tx.isNeed ? '必要' : '想要'}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-slate-700">$${tx.amount}</p>
+                            <button onclick="deleteTx(${index})" class="text-[10px] text-red-400 opacity-0 group-hover:opacity-100 transition">刪除</button>
+                        </div>
+                    </li>
+                `;
+            });
+
+            document.getElementById('balance').innerText = `$${(budget - total).toLocaleString()}`;
+            document.getElementById('needSum').innerText = `$${needTotal}`;
+            document.getElementById('wantSum').innerText = `$${wantTotal}`;
+            
+            const percent = Math.min((total / budget) * 100, 100);
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('budgetPercent').innerText = percent.toFixed(0) + '%';
+
+            updateChart(needTotal, wantTotal);
+        }
+
+        function updateChart(n, w) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['必要', '想要'],
+                    datasets: [{
+                        data: [n, w],
+                        backgroundColor: ['#4f46e5', '#f97316'],
+                        borderWidth: 0,
+                        cutout: '80%'
+                    }]
+                },
+                options: { plugins: { legend: { display: false } } }
+            });
+        }
+
+        async function submitTx() {
+            const title = document.getElementById('title').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const isNeed = document.getElementById('isNeed').checked;
+
+            if(!title || !amount) return;
+
+            await fetch('/api/transaction', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ title, amount, isNeed, category: currentCat, icon: currentIcon })
+            });
+            toggleModal();
+            refresh();
+        }
+
+        async function deleteTx(i) {
+            if(!confirm("確定刪除？")) return;
+            await fetch(`/api/transaction/${i}`, { method: 'DELETE' });
+            refresh();
+        }
+
+        async function setBudget() {
+            const b = prompt("請輸入每月預算：", "10000");
+            if(b) {
+                await fetch('/api/budget', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ budget: b })
+                });
+                refresh();
+            }
+        }
+
+        function selectCat(btn, name, icon) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('bg-indigo-600', 'text-white'));
+            btn.classList.add('bg-indigo-600', 'text-white');
+            currentCat = name;
+            currentIcon = icon;
+        }
+
+        function toggleModal() {
+            const m = document.getElementById('modal');
+            m.classList.toggle('hidden');
+        }
+
+        refresh();
+    </script>
+
+    <style>
+        @keyframes slide-up {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+    </style>
+</body>
+</html>
