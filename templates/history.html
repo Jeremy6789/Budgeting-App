@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+<div class="p-6">
+    <h2 class="text-2xl font-bold mb-6">帳目明細</h2>
+    
+    <!-- 搜尋框 -->
+    <div class="relative mb-6">
+        <i class="fa-solid fa-magnifying-glass absolute left-4 top-4 text-slate-400"></i>
+        <input type="text" id="searchInput" oninput="filterTransactions()" placeholder="搜尋帳目..." class="w-full bg-slate-100 border-none pl-12 p-3 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none">
+    </div>
+
+    <ul id="fullTxList" class="space-y-4">
+        <!-- JS 動態注入 -->
+    </ul>
+</div>
+{% endblock %}

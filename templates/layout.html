@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoneyMaster PRO</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter (更現代的字體) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        @keyframes slide-up { 
+            from { transform: translateY(100%); } 
+            to { transform: translateY(0); } 
+        }
+        .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        
+        .nav-link { color: #94a3b8; transition: all 0.3s; }
+        .nav-link.active { color: #6366f1; } /* 藍色輔助色 */
+        
+        /* 隱藏捲動軸但保持功能 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 pb-28">
+
+    <!-- 行動端容器外殼 -->
+    <div class="max-w-md mx-auto min-h-screen bg-white shadow-[0_0_50px_rgba(0,0,0,0.02)] relative">
+        
+        <!-- 主要內容注入區 -->
+        <main class="animate-fade-in">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- 底部導覽列 (毛玻璃簡約風格) -->
+        <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-xl border-t border-slate-100 flex justify-around items-center h-20 z-40 px-4">
+            
+            <!-- 首頁按鈕 -->
+            <a href="/" class="nav-link flex flex-col items-center justify-center flex-1 py-2 {% if request.path == '/' %}active{% endif %}">
+                <i class="fa-solid fa-house-chimney text-xl"></i>
+                <span class="text-[10px] mt-1.5 font-bold tracking-widest uppercase">儀表板</span>
+            </a>
+
+            <!-- 新增按鈕 (置中突起藍色按鈕) -->
+            <div class="flex-1 flex justify-center -mt-10">
+                <button onclick="toggleModal()" class="w-14 h-14 bg-indigo-600 text-white rounded-2xl shadow-xl shadow-indigo-200 flex items-center justify-center text-xl hover:bg-indigo-700 active:scale-90 transition-all border-4 border-white">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+
+            <!-- 歷史紀錄按鈕 -->
+            <a href="/history" class="nav-link flex flex-col items-center justify-center flex-1 py-2 {% if request.path == '/history' %}active{% endif %}">
+                <i class="fa-solid fa-receipt text-xl"></i>
+                <span class="text-[10px] mt-1.5 font-bold tracking-widest uppercase">明細</span>
+            </a>
+            
+        </nav>
+    </div>
+
+    <!-- 引入新增/編輯彈窗組件 -->
+    {% include 'components/add_modal.html' %}
+
+    <!-- 引入主程式 JS -->
+    <script src="/static/js/main.js"></script>
+    
+    <script>
+        // 切換導覽列活躍狀態的簡單邏輯
+        document.querySelectorAll('.nav-link').forEach(link => {
+            if(link.getAttribute('href') === window.location.pathname) {
+                link.classList.add('active');
+            }
+        });
+    </script>
+</body>
+</html>
