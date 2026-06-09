@@ -1,0 +1,98 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+    <div class="bg-white w-full max-w-md p-10 rounded-[3rem] shadow-xl border border-slate-100">
+        <div class="text-center mb-10">
+            <h2 id="authTitle" class="text-3xl font-black text-slate-800">Budgeting</h2>
+            <p id="authSubTitle" class="text-slate-400 mt-2 font-medium">請登入您的帳號</p>
+        </div>
+
+        <!-- 錯誤訊息提示區 -->
+        <div id="errorMessage" class="hidden mb-6 p-4 bg-red-50 border border-red-100 text-red-500 text-sm font-bold rounded-2xl text-center"></div>
+
+        <form id="authForm" class="space-y-6">
+            <div>
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">帳號名稱</label>
+                <input type="text" id="username" required placeholder="請輸入帳號" 
+                       class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all">
+            </div>
+            <div>
+                <label class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">密碼</label>
+                <input type="password" id="password" required placeholder="請輸入密碼" 
+                       class="w-full bg-slate-50 border-2 border-slate-100 p-4 rounded-2xl outline-none focus:border-indigo-500 focus:bg-white transition-all">
+            </div>
+            <button type="submit" id="authBtn" class="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-indigo-100 active:scale-95 transition-all">
+                立即登入
+            </button>
+        </form>
+
+        <!-- 註冊 / 登入 切換按鈕 -->
+        <div class="mt-8 text-center">
+            <button type="button" onclick="toggleAuthMode()" id="toggleBtn" class="text-sm font-bold text-indigo-500 hover:text-indigo-700 transition-colors">
+                還沒有帳號？立即註冊
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let isLogin = true;
+
+function toggleAuthMode() {
+    isLogin = !isLogin;
+    
+    // 清除可能殘留的錯誤訊息
+    document.getElementById('errorMessage').classList.add('hidden');
+
+    // 切換標題與副標題
+    document.getElementById('authTitle').innerText = isLogin ? 'Budgeting' : '建立新帳號';
+    document.getElementById('authSubTitle').innerText = isLogin ? '請登入您的帳號' : '開始建立您的記帳旅程';
+    
+    // 切換按鈕文字
+    document.getElementById('authBtn').innerText = isLogin ? '立即登入' : '完成註冊';
+    document.getElementById('toggleBtn').innerText = isLogin ? '還沒有帳號？立即註冊' : '已有帳號？返回登入';
+}
+
+document.getElementById('authForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    const errBox = document.getElementById('errorMessage');
+
+    errBox.classList.add('hidden'); // 隱藏先前的錯誤
+
+    const url = isLogin ? '/api/auth/login' : '/api/auth/register';
+
+    try {
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            if (isLogin) {
+                // 登入成功，進入主頁
+                window.location.href = '/';
+            } else {
+                // 註冊成功，提示並自動切換回登入模式
+                alert('帳號註冊成功！請直接登入');
+                toggleAuthMode();
+                // 自動幫使用者把帳號填好，方便他們登入
+                document.getElementById('username').value = username;
+                document.getElementById('password').value = '';
+            }
+        } else {
+            // 顯示來自後端的錯誤（例如帳號重複或密碼錯誤）
+            errBox.innerText = data.message || '操作失敗，請稍後再試';
+            errBox.classList.remove('hidden');
+        }
+    } catch (err) {
+        errBox.innerText = '連線伺服器失敗，請確認 Flask 是否開啟';
+        errBox.classList.remove('hidden');
+    }
+};
+</script>
+{% endblock %}

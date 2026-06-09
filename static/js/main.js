@@ -26,20 +26,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // 2. API 資料獲取
 async function fetchData() {
+
+    if (window.location.pathname === '/login') return; 
+    
     try {
         const res = await fetch('/api/data');
-        const data = await res.json();
         
+        // 如果伺服器說未授權，跳轉到登入頁
+        if (res.status === 401) {
+            window.location.href = '/login';
+            return;
+        }
+
+        const data = await res.json();
         allTransactions = data.transactions;
         currentBudget = data.budget;
 
-        // 根據當前頁面元素決定渲染內容
-        if (document.getElementById('balance')) {
-            renderDashboard(data);
-        }
-        if (document.getElementById('fullTxList')) {
-            renderHistory(allTransactions);
-        }
+        if (document.getElementById('balance')) renderDashboard(data);
+        if (document.getElementById('fullTxList')) renderHistory(allTransactions);
     } catch (err) {
         console.error("資料載入失敗:", err);
     }
